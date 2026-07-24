@@ -1,0 +1,28 @@
+services:
+  # Backend API
+  - type: web
+    name: everfresh-water-backend
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGIN
+        value: https://your-frontend-url.vercel.app
+      - key: DB_PATH
+        value: ./db/everfresh.db
+
+  # Frontend Static Site
+  - type: web
+    name: everfresh-water-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        value: https://everfresh-water-backend.onrender.com/api
