@@ -14,13 +14,10 @@ const app = express();
 const PORT = process.env.PORT || 4000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-/* -------------------------------------------------- */
-/* CORS Configuration */
-/* -------------------------------------------------- */
-
+// CORS Configuration
 const corsOrigins = process.env.CORS_ORIGIN
   ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-  : ['http://localhost:5173', 'http://localhost:3000'];
+  : ['http://localhost:5173', 'http://localhost:3000', 'https://everfresh-water.vercel.app'];
 
 app.use(cors({
   origin: NODE_ENV === 'production' ? corsOrigins : '*',
@@ -30,10 +27,7 @@ app.use(cors({
 
 app.use(express.json());
 
-/* -------------------------------------------------- */
-/* Request Logging (for production) */
-/* -------------------------------------------------- */
-
+// Request Logging
 if (NODE_ENV === 'production') {
   app.use((req, res, next) => {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
@@ -41,10 +35,7 @@ if (NODE_ENV === 'production') {
   });
 }
 
-/* -------------------------------------------------- */
-/* Public Routes */
-/* -------------------------------------------------- */
-
+// Public Routes
 app.get('/api/health', (req, res) => {
   try {
     const userCount = db.prepare(
@@ -65,10 +56,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/auth', authRoutes);
 
-/* -------------------------------------------------- */
-/* Protected Routes - Require Authentication */
-/* -------------------------------------------------- */
-
+// Protected Routes
 app.use('/api/daily-records', authenticate, require('./routes/dailyRecords'));
 app.use('/api/mpesa-agent', authenticate, require('./routes/mpesaAgent'));
 app.use('/api/water-purchases', authenticate, require('./routes/waterPurchases'));
@@ -78,10 +66,7 @@ app.use('/api/debts', authenticate, require('./routes/debts'));
 app.use('/api/reports', authenticate, require('./routes/reports'));
 app.use('/api/batches', authenticate, require('./routes/batches'));
 
-/* -------------------------------------------------- */
-/* 404 Handler */
-/* -------------------------------------------------- */
-
+// 404 Handler
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -89,10 +74,7 @@ app.use((req, res) => {
   });
 });
 
-/* -------------------------------------------------- */
-/* Error Handler */
-/* -------------------------------------------------- */
-
+// Error Handler
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({
@@ -101,17 +83,19 @@ app.use((err, req, res, next) => {
   });
 });
 
-/* -------------------------------------------------- */
-/* Start Server */
-/* -------------------------------------------------- */
+// For Vercel serverless
+module.exports = app;
 
-app.listen(PORT, () => {
-  console.log('====================================');
-  console.log(' Everfresh Water Backend');
-  console.log('====================================');
-  console.log(`Environment: ${NODE_ENV}`);
-  console.log(`Server: http://localhost:${PORT}`);
-  console.log(`Health: http://localhost:${PORT}/api/health`);
-  console.log(`Login: POST http://localhost:${PORT}/api/auth/login`);
-  console.log('====================================');
-});
+// For local development
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log('====================================');
+    console.log(' Everfresh Water Backend');
+    console.log('====================================');
+    console.log(`Environment: ${NODE_ENV}`);
+    console.log(`Server: http://localhost:${PORT}`);
+    console.log(`Health: http://localhost:${PORT}/api/health`);
+    console.log(`Login: POST http://localhost:${PORT}/api/auth/login`);
+    console.log('====================================');
+  });
+}
